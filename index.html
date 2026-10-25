@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALCHEMIST — Interactive Luxury Cocktail Motion</title>
+    <!-- Futura 서체 폰트 연결 -->
+    <link rel="stylesheet" href="https://use.typekit.net/ovt6xge.css">
+    <style>
+        :root {
+            --neon-pink: #ff2a85;
+            --neon-amber: #ff9900;
+            --neon-yellow: #ffee00;
+            --neon-cyan: #00f0ff;
+            --neon-purple: #9d4edd;
+            --grad-brand: linear-gradient(135deg, #ff2a85, #ff9900 50%, #ffee00);
+            --grad-bg: radial-gradient(circle at 50% 30%, #1a0b2e 0%, #080312 70%, #030107 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: var(--grad-bg);
+            font-family: "Futura PT", "Futura", "Century Gothic", -apple-system, sans-serif;
+            color: #ffffff;
+        }
+
+        /* ----- HEADER & BRANDING ----- */
+        header {
+            position: absolute;
+            top: 24px;
+            left: 32px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Kinetic Glass SVG Symbol */
+        .symbol-svg {
+            width: 54px;
+            height: 54px;
+            filter: drop-shadow(0 0 8px rgba(255, 42, 133, 0.6));
+        }
+
+        .brand-text-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Futura Right-Slanted Wordmark */
+        .brand-wordmark {
+            font-family: "Futura PT", "Futura", "Century Gothic", sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            font-style: italic; /* Right Slant */
+            background: var(--grad-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 42, 133, 0.3);
+            line-height: 1;
+        }
+
+        .brand-slogan {
+            font-family: "Futura PT", "Futura", "Century Gothic", sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        /* ----- NAVIGATION TABS & AUDIO TOGGLE ----- */
+        nav {
+            position: absolute;
+            top: 28px;
+            right: 32px;
+            z-index: 10;
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--grad-brand);
+            color: #000;
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.5);
+        }
+
+        #btn-audio {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ----- MAIN CANVAS & WORKSPACE ----- */
+        #motion-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* ----- INGREDIENT CONTROLLER & CONTROLS ----- */
+        .controls-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 90%;
+            max-width: 680px;
+            background: rgba(18, 10, 32, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 20px 28px;
+            border-radius: 28px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .panel-title {
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .ingredients-tray {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .ing-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .ing-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            background: rgba(255, 42, 133, 0.2);
+            border-color: var(--neon-pink);
+        }
+
+        .ing-btn:active {
+            transform: scale(0.95);
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .slider-group label {
+            font-size: 12px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        input[type=range] {
+            flex: 1;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--neon-pink);
+            box-shadow: 0 0 10px var(--neon-pink);
+            cursor: pointer;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .shake-btn {
+            background: var(--grad-brand);
+            border: none;
+            color: #000;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 42, 133, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .shake-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ----- 3D RECIPE CARD DECK OVERLAY ----- */
+        .cards-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .cards-overlay.active {
+            display: flex;
+            pointer-events: auto;
+        }
+
+        .deck-container {
+            position: relative;
+            width: 800px;
+            height: 480px;
+        }
+
+        .card-3d {
+            position: absolute;
+            width: 200px;
+            height: 300px;
+            left: 50%;
+            top: 50%;
+            margin-left: -100px;
+            margin-top: -150px;
+            perspective: 1000px;
+            cursor: pointer;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-3d.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, rgba(35, 15, 60, 0.9), rgba(15, 5, 28, 0.95));
+            backdrop-filter: blur(10px);
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, rgba(255, 42, 133, 0.9), rgba(150, 20, 90, 0.95));
+            transform: rotateY(180deg);
+            color: #fff;
+        }
+
+        .card-icon {
+            font-size: 36px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--grad-brand);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-recipe {
+            font-size: 12px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .shuffle-btn-fixed {
+            position: absolute;
+            top: 100px;
+            right: 32px;
+            z-index: 10;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BRAND HEADER -->
+    <header>
+        <div class="brand-logo-container">
+            <svg class="symbol-svg" viewBox="0 0 100 100">
+                <defs>
+                    <linearGradient id="symbolGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff2a85"/>
+                        <stop offset="50%" stop-color="#ff9900"/>
+                        <stop offset="100%" stop-color="#ffee00"/>
+                    </linearGradient>
+                </defs>
+                <path d="M 15 35 Q 50 45 85 35 L 65 72 Q 50 77 35 72 Z" fill="none" stroke="url(#symbolGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M 22 44 Q 35 38 50 44 T 78 44 L 62 68 Q 50 72 38 68 Z" fill="url(#symbolGrad)" opacity="0.35"/>
+                <g transform="translate(62, 32)">
+                    <circle cx="0" cy="0" r="14" fill="none" stroke="url(#symbolGrad)" stroke-width="2.5"/>
+                    <circle cx="0" cy="0" r="5" fill="url(#symbolGrad)"/>
+                    <path d="M-2 -17 L2 -17 L3 -13 L-3 -13 Z" fill="url(#symbolGrad)"/>
+                    <path d="M-2 13 L2 13 L3 17 L-3 17 Z" fill="url(#symbolGrad)"/>
+                    <path d="M-17 -2 L-17 2 L-13 3 L-13 -3 Z" fill="url(#symbolGrad)"/>
+                    <path d="M13 -2 L13 2 L17 3 L17 -3 Z" fill="url(#symbolGrad)"/>
+                    <path d="M-12 -12 L-9 -9 L-7 -11 L-10 -14 Z" fill="url(#symbolGrad)"/>
+                    <path d="M9 9 L12 12 L14 10 L11 7 Z" fill="url(#symbolGrad)"/>
+                    <path d="M-12 9 L-9 6 L-7 8 L-10 11 Z" fill="url(#symbolGrad)"/>
+                    <path d="M9 -9 L12 -12 L14 -10 L11 -7 Z" fill="url(#symbolGrad)"/>
+                </g>
+            </svg>
+            <div class="brand-text-group">
+                <h1 class="brand-wordmark">Alchemist</h1>
+                <span class="brand-slogan">Bring Your Own Flavor</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION WITH AUDIO BGM -->
+    <nav>
+        <button class="nav-btn active" id="tab-lab">COCKTAIL LAB</button>
+        <button class="nav-btn" id="tab-deck">RECIPE CARD DECK</button>
+        <button class="nav-btn" id="btn-audio">🎻 MUSIC OFF</button>
+    </nav>
+
+    <!-- SHUFFLE BUTTON FOR DECK -->
+    <button class="shake-btn shuffle-btn-fixed" id="btn-shuffle-deck">🔀 SHUFFLE DECK</button>
+
+    <!-- MOTION CANVAS -->
+    <canvas id="motion-canvas"></canvas>
+
+    <!-- LAB CONTROLS PANEL -->
+    <div class="controls-panel" id="lab-controls">
+        <span class="panel-title">Add Ingredients & Color Mix</span>
+        <div class="ingredients-tray">
+            <button class="ing-btn" data-type="ice">🧊 Ice Cube</button>
+            <button class="ing-btn" data-type="lime">🍋 Lime Slice</button>
+            <button class="ing-btn" data-type="mint">🌿 Mint Leaf</button>
+            <button class="ing-btn" data-type="berry">🫐 Wild Berry</button>
+            <button class="ing-btn" data-type="gold">✨ Gold Dust</button>
+        </div>
+        <div class="slider-group">
+            <label>LIQUID COLOR</label>
+            <input type="range" id="color-hue" min="0" max="360" value="330">
+        </div>
+        <div class="action-btns">
+            <button class="shake-btn" id="btn-shake">SHAKE GLASS</button>
+            <button class="ing-btn" id="btn-reset">RESET</button>
+        </div>
+    </div>
+
+    <!-- 3D CARD DECK OVERLAY -->
+    <div class="cards-overlay" id="cards-overlay">
+        <div class="deck-container" id="deck-container"></div>
+    </div>
+
+    <script>
+        // ----- WEB AUDIO API SYNTHESIZER (Elgar E-minor Cello Resonance) -----
+let audioCtx = null;
+let isAudioPlaying = false;
+let bgmInterval = null;
+const btnAudio = document.getElementById('btn-audio');
+
+// E-minor Cello Chord & Melody Frequencies (Hz)
+const celloNotes = [
+    82.41,  // E2 (Bass Cello)
+    123.47, // B2
+    164.81, // E3
+    196.00, // G3
+    246.94, // B3
+    329.63, // E4 (High Cello Melody)
+    293.66  // D4
+];
+
+function playCelloTone(freq, duration = 3.5, type = 'sawtooth') {
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const filter = audioCtx.createBiquadFilter();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+    // Warm Low-pass Filter for Cello Acoustic Resonance
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(450, audioCtx.currentTime);
+
+    // Fade-in & Smooth Envelope
+    gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.6);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+
+function startCelloSequence() {
+    let noteIdx = 0;
+    // Play deep E2 Cello Drone Base
+    playCelloTone(82.41, 6.0, 'sawtooth');
+    playCelloTone(123.47, 6.0, 'triangle');
+
+    bgmInterval = setInterval(() => {
+        if (!isAudioPlaying) return;
+        
+        // Play Ambient Cello Melodic Lines
+        const note = celloNotes[noteIdx % celloNotes.length];
+        playCelloTone(note, 3.8, 'sawtooth');
+        
+        if (noteIdx % 3 === 0) {
+            playCelloTone(82.41, 5.0, 'triangle'); // Bass support
+        }
+        noteIdx++;
+    }, 2400);
+}
+
+btnAudio.addEventListener('click', () => {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    if (!isAudioPlaying) {
+        isAudioPlaying = true;
+        startCelloSequence();
+        btnAudio.innerText = '🎻 MUSIC ON (Elgar E-minor Synth)';
+        btnAudio.style.background = 'var(--grad-brand)';
+        btnAudio.style.color = '#000';
+    } else {
+        isAudioPlaying = false;
+        if (bgmInterval) clearInterval(bgmInterval);
+        btnAudio.innerText = '🎻 MUSIC OFF';
+        btnAudio.style.background = 'rgba(255, 255, 255, 0.05)';
+        btnAudio.style.color = 'rgba(255, 255, 255, 0.8)';
+    }
+});
+
+        // ----- CANVAS & PHYSICS SYSTEM -----
+        const canvas = document.getElementById('motion-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initGlassPosition();
+        });
+
+        let mouse = { x: width / 2, y: height / 2, vx: 0, vy: 0 };
+        let currentHue = 330;
+        let isShaking = false;
+        let shakeIntensity = 0;
+
+        let glass = { x: width / 2, y: height / 2 + 50, w: 220, h: 320 };
+
+        function initGlassPosition() {
+            glass.x = width / 2;
+            glass.y = height / 2 + 60;
+        }
+        initGlassPosition();
+
+        let ambientParticles = [];
+        let splashParticles = [];
+        let droppedIngredients = [];
+
+        for (let i = 0; i < 90; i++) {
+            ambientParticles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.5 + 0.5,
+                hue: Math.random() * 60 + 300,
+                speedY: Math.random() * 0.8 + 0.2,
+                angle: Math.random() * Math.PI * 2
+            });
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.vx = e.clientX - mouse.x;
+            mouse.vy = e.clientY - mouse.y;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+
+            if (Math.hypot(mouse.vx, mouse.vy) > 5) {
+                ambientParticles.push({
+                    x: mouse.x,
+                    y: mouse.y,
+                    r: Math.random() * 3 + 1,
+                    hue: currentHue + Math.random() * 40 - 20,
+                    speedY: (Math.random() - 0.5) * 2,
+                    speedX: (Math.random() - 0.5) * 2,
+                    life: 1
+                });
+            }
+        });
+
+        function dropIngredient(type) {
+            const startX = glass.x + (Math.random() * 80 - 40);
+            const startY = glass.y - 200;
+            
+            droppedIngredients.push({
+                type: type,
+                x: startX,
+                y: startY,
+                vx: (Math.random() - 0.5) * 2,
+                vy: Math.random() * 3 + 4,
+                rot: Math.random() * Math.PI,
+                vRot: (Math.random() - 0.5) * 0.1,
+                settled: false
+            });
+
+            createSplash(startX, glass.y - 40);
+        }
+
+        function createSplash(x, y) {
+            for (let i = 0; i < 25; i++) {
+                splashParticles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 1) * 7 - 2,
+                    r: Math.random() * 4 + 1.5,
+                    life: 1,
+                    hue: currentHue
+                });
+            }
+        }
+
+        document.querySelectorAll('.ing-btn[data-type]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                dropIngredient(btn.dataset.type);
+            });
+        });
+
+        document.getElementById('color-hue').addEventListener('input', (e) => {
+            currentHue = parseInt(e.target.value);
+        });
+
+        document.getElementById('btn-shake').addEventListener('click', () => {
+            isShaking = true;
+            shakeIntensity = 25;
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => createSplash(glass.x, glass.y - 30), i * 100);
+            }
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            droppedIngredients = [];
+            splashParticles = [];
+        });
+
+        let waveOffset = 0;
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            let offsetX = 0;
+            let offsetY = 0;
+            if (isShaking) {
+                offsetX = (Math.random() - 0.5) * shakeIntensity;
+                offsetY = (Math.random() - 0.5) * shakeIntensity;
+                shakeIntensity *= 0.92;
+                if (shakeIntensity < 0.5) isShaking = false;
+            }
+
+            const gx = glass.x + offsetX;
+            const gy = glass.y + offsetY;
+
+            ambientParticles.forEach((p, idx) => {
+                p.y -= p.speedY || 0.5;
+                if (p.speedX) p.x += p.speedX;
+                if (p.life !== undefined) p.life -= 0.02;
+
+                if (p.y < 0 || (p.life !== undefined && p.life <= 0)) {
+                    if (p.life !== undefined) {
+                        ambientParticles.splice(idx, 1);
+                    } else {
+                        p.y = height;
+                        p.x = Math.random() * width;
+                    }
+                }
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, ${p.life !== undefined ? p.life : 0.6})`;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `hsl(${p.hue}, 100%, 50%)`;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            ctx.save();
+            ctx.translate(gx, gy);
+
+            const topW = glass.w / 2;
+            const botW = glass.w * 0.35;
+            const h = glass.h;
+
+            ctx.beginPath();
+            ctx.moveTo(-botW + 10, h / 2 - 15);
+            ctx.lineTo(botW - 10, h / 2 - 15);
+            ctx.lineTo(topW - 12, -h / 2 + 60);
+
+            waveOffset += 0.05;
+            for (let x = topW - 12; x >= -topW + 12; x -= 5) {
+                const y = Math.sin(x * 0.03 + waveOffset) * 6 - (h / 2 - 60);
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+
+            const liquidGrad = ctx.createLinearGradient(0, -h / 2 + 40, 0, h / 2);
+            liquidGrad.addColorStop(0, `hsla(${currentHue}, 90%, 60%, 0.85)`);
+            liquidGrad.addColorStop(0.5, `hsla(${(currentHue + 40) % 360}, 85%, 50%, 0.75)`);
+            liquidGrad.addColorStop(1, `hsla(${(currentHue + 80) % 360}, 100%, 40%, 0.9)`);
+
+            ctx.fillStyle = liquidGrad;
+            ctx.fill();
+
+            droppedIngredients.forEach(item => {
+                if (!item.settled) {
+                    item.x += item.vx;
+                    item.y += item.vy;
+                    item.rot += item.vRot;
+
+                    if (item.y > gy + h / 2 - 50) {
+                        item.y = gy + h / 2 - 50;
+                        item.vy = 0;
+                        item.vx = 0;
+                        item.settled = true;
+                    }
+                }
+
+                ctx.save();
+                ctx.translate(item.x - gx, item.y - gy);
+                ctx.rotate(item.rot);
+
+                if (item.type === 'ice') {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.strokeRect(-16, -16, 32, 32);
+                    ctx.fillRect(-16, -16, 32, 32);
+                } else if (item.type === 'lime') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 18, 0, Math.PI);
+                    ctx.fillStyle = '#76ff03';
+                    ctx.fill();
+                } else if (item.type === 'mint') {
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 8, 16, Math.PI / 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00e676';
+                    ctx.fill();
+                } else if (item.type === 'berry') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+                    ctx.fillStyle = '#d500f9';
+                    ctx.fill();
+                } else if (item.type === 'gold') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffd700';
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#ffd700';
+                    ctx.fill();
+                }
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.moveTo(-topW, -h / 2);
+            ctx.lineTo(-botW, h / 2);
+            ctx.lineTo(botW, h / 2);
+            ctx.lineTo(topW, -h / 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.strokeWidth = 3;
+            ctx.stroke();
+
+            ctx.restore();
+
+            splashParticles.forEach((sp, idx) => {
+                sp.x += sp.vx;
+                sp.y += sp.vy;
+                sp.vy += 0.25;
+                sp.life -= 0.025;
+
+                if (sp.life <= 0) {
+                    splashParticles.splice(idx, 1);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${sp.hue}, 100%, 65%, ${sp.life})`;
+                    ctx.fill();
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // ----- 3D RECIPE CARD DECK -----
+        const recipes = [
+            { icon: '🍸', name: 'NEON ALCHEMY', desc: 'Gin, Electric Blue Curaçao, Tonic, Edible Gold Dust.' },
+            { icon: '🍹', name: 'AMBER SUNSET', desc: 'Bourbon, Passionfruit, Amber Syrup, Rosemary Smoke.' },
+            { icon: '🧪', name: 'CYBER MINT MOJITO', desc: 'White Rum, Lime, Carbonated Mint, Sparkling Physics.' },
+            { icon: '🔮', name: 'VELVET ELIXIR', desc: 'Vodka, Wild Berry Liquer, Violet Essence, Sparkling Bubbles.' }
+        ];
+
+        const deckContainer = document.getElementById('deck-container');
+
+        recipes.forEach((rec, idx) => {
+            const card = document.createElement('div');
+            card.className = 'card-3d';
+            card.style.transform = `translate(${ (idx - 1.5) * 160 }px, ${ (idx - 1.5) * 10 }px) rotate(${ (idx - 1.5) * 6 }deg)`;
+            
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        <span class="card-icon">${rec.icon}</span>
+                        <h3 class="card-title">${rec.name}</h3>
+                        <p style="font-size: 11px; opacity: 0.6;">CLICK TO REVEAL FORMULA</p>
+                    </div>
+                    <div class="card-back">
+                        <h4 style="font-size: 16px; font-weight: 700;">RECIPE FORMULA</h4>
+                        <p class="card-recipe">${rec.desc}</p>
+                        <span style="font-size: 10px; opacity: 0.8; text-transform: uppercase;">Alchemist Signature</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                card.classList.toggle('flipped');
+            });
+
+            deckContainer.appendChild(card);
+        });
+
+        document.getElementById('btn-shuffle-deck').addEventListener('click', () => {
+            const cards = document.querySelectorAll('.card-3d');
+            cards.forEach((c) => {
+                const randomX = (Math.random() - 0.5) * 450;
+                const randomY = (Math.random() - 0.5) * 200;
+                const randomRot = (Math.random() - 0.5) * 40;
+                c.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg)`;
+            });
+        });
+
+        const tabLab = document.getElementById('tab-lab');
+        const tabDeck = document.getElementById('tab-deck');
+        const labControls = document.getElementById('lab-controls');
+        const cardsOverlay = document.getElementById('cards-overlay');
+        const btnShuffle = document.getElementById('btn-shuffle-deck');
+
+        tabLab.addEventListener('click', () => {
+            tabLab.classList.add('active');
+            tabDeck.classList.remove('active');
+            labControls.style.display = 'flex';
+            cardsOverlay.classList.remove('active');
+            btnShuffle.style.display = 'none';
+        });
+
+        tabDeck.addEventListener('click', () => {
+            tabDeck.classList.add('active');
+            tabLab.classList.remove('active');
+            labControls.style.display = 'none';
+            cardsOverlay.classList.add('active');
+            btnShuffle.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
